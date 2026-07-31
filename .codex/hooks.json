@@ -1,0 +1,43 @@
+{
+  "description": "Advisory academic manuscript guards",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .codex/hooks/load_paper_context.py",
+            "statusMessage": "Loading canonical paper state",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|apply_patch|shell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .codex/hooks/paper_guard.py --incremental",
+            "statusMessage": "Checking manuscript boundaries",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .codex/hooks/consistency_check.py --changed",
+            "statusMessage": "Running manuscript consistency checks",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

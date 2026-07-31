@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "updated_at": null,
+  "paper": {
+    "title": {
+      "value": null,
+      "confidence": "unknown",
+      "evidence": []
+    },
+    "target_venue": {
+      "value": null,
+      "confidence": "unknown",
+      "evidence": []
+    },
+    "audience": {
+      "value": null,
+      "confidence": "unknown",
+      "evidence": []
+    },
+    "central_problem": {
+      "value": null,
+      "confidence": "unknown",
+      "evidence": []
+    },
+    "central_thesis": {
+      "value": null,
+      "confidence": "unknown",
+      "evidence": []
+    },
+    "central_contribution": {
+      "value": null,
+      "confidence": "unknown",
+      "evidence": []
+    },
+    "contribution_boundaries": {
+      "included": [],
+      "excluded": []
+    },
+    "non_contributions": [],
+    "reviewer_takeaway": {
+      "value": null,
+      "confidence": "unknown",
+      "evidence": []
+    },
+    "disclosure_policy": {
+      "main_text": {
+        "include": [
+          "scientific problem",
+          "model structure",
+          "formulation",
+          "essential algorithmic choices",
+          "evidence",
+          "implications"
+        ],
+        "exclude": [
+          "local paths",
+          "agent workflow",
+          "debugging chronology",
+          "machine-specific commands"
+        ]
+      },
+      "appendix_or_supplement": {
+        "include": [
+          "reproducibility details too operational for main text"
+        ]
+      },
+      "repository_documentation": {
+        "include": [
+          "scripts",
+          "commands",
+          "machine-specific setup"
+        ]
+      }
+    },
+    "writing_priorities": [
+      "scientific_correctness",
+      "evidence_integrity",
+      "global_consistency",
+      "concise_reviewer_facing_exposition"
+    ],
+    "unresolved_questions": []
+  }
+}
