@@ -20,7 +20,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat prompts/.bootstrap-gz/*.b64 \
+          cat \
+            prompts/.bootstrap-gz/01.b64 \
+            prompts/.bootstrap-gz/02a.b64 \
+            prompts/.bootstrap-gz/02b.b64 \
+            prompts/.bootstrap-gz/02c.b64 \
             | tr -d '\n\r ' \
             | base64 --decode \
             | gzip --decompress \
