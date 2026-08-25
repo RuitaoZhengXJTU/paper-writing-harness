@@ -1,0 +1,45 @@
+name: Update initialization prompt for preview audit v2
+
+on:
+  push:
+    paths:
+      - '.github/tmp_init_trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Patch initialization prompt
+        run: python .github/tmp_update_init.py
+
+      - name: Verify upgraded protocol
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -F 'PDF annotations on an unapproved preview remain `DESIGN_PREVIEW`' prompts/INITIALIZE_EXISTING_REPOSITORY.md
+          grep -F '`preview.md` is authoritative' prompts/INITIALIZE_EXISTING_REPOSITORY.md
+          grep -F 'defensive writing' prompts/INITIALIZE_EXISTING_REPOSITORY.md
+          grep -F 'canonical owner section' prompts/INITIALIZE_EXISTING_REPOSITORY.md
+          grep -F 'Prefer DELETE / MERGE / COMPRESS' prompts/INITIALIZE_EXISTING_REPOSITORY.md
+
+      - name: Remove temporary upload and patch files
+        shell: bash
+        run: |
+          rm -rf .upload-init-v2
+          git rm -f .github/tmp_update_init.py .github/tmp_init_trigger .github/workflows/tmp-update-init.yml
+
+      - name: Commit upgraded initialization prompt
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Upgrade initialization prompt for PDF preview review and audit'
+          git push
