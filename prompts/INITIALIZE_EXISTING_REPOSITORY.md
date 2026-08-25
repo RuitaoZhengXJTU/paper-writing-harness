@@ -446,36 +446,48 @@ Use when wording, formula, ordering, or a local transformation is specified.
 
 #### `DESIGN_PREVIEW`
 
-Use when purpose or structure is known but prose is not approved.
+Use when purpose or structure is known but prose is not approved, including all review iterations on an unapproved preview PDF.
 
 - do not edit `paper/`;
-- save under `scratch/previews/`;
-- produce section thesis, paragraph cards, claim/evidence needs, dependencies, exclusions, assumptions, and risks;
-- polished prose is not approval.
+- create a versioned bundle under `scratch/previews/<preview-id>/`;
+- treat `preview.md` as the authoritative editable source;
+- generate `render/preview.tex` and `render/preview.pdf` only as review views;
+- include section thesis, paragraph cards with stable IDs, claim/evidence needs, dependencies, exclusions, assumptions, risks, and complete unapproved preview prose;
+- when the reviewer annotates the PDF, map every annotation back to Markdown, record the decision, revise Markdown first, regenerate TeX/PDF, and increment the revision;
+- PDF annotations remain `DESIGN_PREVIEW` even when they target an exact sentence;
+- polished prose, a clean PDF, or absence of annotations is not approval.
 
 #### `APPLY_PREVIEW`
 
-Use only with an identified approved preview or explicit authorization.
+Use only after explicit approval of both preview ID and revision.
 
+- read the approved `preview.md` as the source of truth;
+- treat generated TeX/PDF as review artifacts only;
 - implement only approved decisions;
+- do not carry review anchors or annotations into `paper/`;
 - do not redesign silently;
-- use manuscript-safe placeholders for unavailable evidence;
 - validate globally after editing.
 
 #### `AUDIT`
 
-Use for consistency, duplication, notation, evidence, publication boundary, or reviewer-readiness checks.
+Use for consistency, semantic duplication, defensive writing, over-expression, information ownership, notation, evidence, publication boundary, or reviewer-readiness checks.
 
 - read-only by default;
-- report locations and minimal repairs;
-- separate objective violations from optional style suggestions.
+- prefer subtraction over defensive addition;
+- detect semantically repeated explanations even when wording differs;
+- distinguish legitimate assumptions/limitations/caveats from unnecessary defensive prose;
+- identify the canonical owner section for repeated ideas;
+- recommend one primary action: `KEEP`, `DELETE`, `MERGE`, `COMPRESS`, `RELOCATE`, or `REWRITE`;
+- report locations and minimal repairs.
 
 Routing rules:
 
 - infer a mode only when unambiguous;
 - mixed requests preserve exact instructions as locked constraints and route the remaining open design to `DESIGN_PREVIEW`;
+- PDF annotations on an unapproved preview remain `DESIGN_PREVIEW`, not `EXACT_EDIT`;
 - material ambiguity defaults to `DESIGN_PREVIEW`;
-- never edit `paper/` merely because a preview looks polished.
+- never edit `paper/` merely because a preview looks polished;
+- route to `APPLY_PREVIEW` only after explicit approval of preview ID and revision.
 
 ### 7.3 Source of truth
 
@@ -539,31 +551,27 @@ For every edit:
 
 ### 7.7 Global consistency
 
-Check:
+Check contribution and scope, terminology and notation, method names, datasets/baselines/metrics, numerical values and evidence status, equations/figures/tables/citations/references, claim strength, cross-section dependencies, semantic duplication, contradictions, paragraph-level rhetorical continuity, information ownership, over-expression, defensive writing, and publication-boundary leakage.
 
-- central contribution and scope;
-- terminology and notation;
-- method/model names;
-- datasets, baselines, metrics;
-- numerical values and result status;
-- equations, figures, tables, citations, labels, and section references;
-- claim strength;
-- abstract/introduction/method/experiments/discussion/conclusion dependencies;
-- duplicates and contradictions;
-- publication-boundary leakage.
+Prefer deletion, merging, compression, or relocation over adding more explanation when meaning is already present. A concept should have one canonical explanatory home. Repetition in Abstract, Introduction, Discussion, or Conclusion is acceptable only when it performs a distinct rhetorical role and is materially compressed relative to the owner section.
 
 ### 7.8 Preview discipline
 
-Every preview must include:
+Each preview is a versioned bundle:
 
-- preview ID;
-- target section;
-- section purpose and takeaway;
-- paragraph cards with purpose, claim, evidence, transitions, exclusions, and uncertainty;
-- proposed equations/figures/tables;
-- globally affected sections;
-- acceptance checklist;
-- explicit assumptions.
+```text
+scratch/previews/<preview-id>/
+├── preview.md
+├── render/
+│   ├── preview.tex
+│   └── preview.pdf
+└── review/
+    └── decisions.md
+```
+
+`preview.md` is authoritative. Generated TeX/PDF are review views only. Include preview ID + revision, paragraph cards with stable IDs, complete unapproved preview prose, claim/evidence needs, assumptions, exclusions, dependencies, proposed equations/figures/tables, and an acceptance checklist.
+
+For every PDF annotation round: map annotations to Markdown, record `ACCEPTED` / `PARTIAL` / `REJECTED` / `BLOCKED` decisions, revise Markdown first, regenerate TeX/PDF, and increment the revision. Never patch generated TeX as an independent prose source. Explicit approval of preview ID and revision is required before manuscript application.
 
 ### 7.9 Agent ownership
 
@@ -583,6 +591,8 @@ Every writing task reports:
 - unresolved high-severity issues;
 - stale sections;
 - assumptions and placeholders.
+
+For preview work also report preview ID, revision, Markdown source path, TeX/PDF render paths, annotation status, and explicit approval status.
 
 Do not put the entire detailed workflow in `AGENTS.md`; reference the skills.
 
@@ -637,69 +647,44 @@ Must not trigger for open-ended section design or whole-paper stylistic rewritin
 
 ### 8.3 `section-architect`
 
-Trigger:
+Trigger when the user knows section purpose/rough structure but has not approved prose, or provides PDF annotations on an unapproved preview.
 
-- user knows section purpose, rough structure, or required ideas but has not approved prose.
+Required bundle under `scratch/previews/<preview-id>/`:
 
-Required output under `scratch/previews/`:
+- authoritative `preview.md` with stable preview ID and revision;
+- paragraph cards with stable paragraph IDs;
+- claim/evidence matrix, assumptions, exclusions, dependencies, risks, and acceptance checklist;
+- complete unapproved preview prose;
+- generated `render/preview.tex` and `render/preview.pdf`;
+- `review/decisions.md` for annotation mapping and disposition.
 
-- stable preview ID;
-- source request summary;
-- locked constraints;
-- section thesis;
-- paragraph cards;
-- claim/evidence matrix;
-- missing evidence;
-- proposed equations/figures/tables;
-- exclusions;
-- dependencies;
-- risks;
-- acceptance checklist;
-- optional limited sample prose clearly labeled non-final.
-
-Must not edit `paper/`.
+For PDF review, map annotations back to Markdown, revise Markdown first, regenerate TeX/PDF, and increment the revision. Must not edit `paper/`.
 
 ### 8.4 `manuscript-composer`
 
-Trigger:
-
-- approved preview ID or explicit authorization to turn a design into manuscript prose.
+Trigger only after explicit approval of a preview ID and revision.
 
 Required workflow:
 
-- verify preview exists and approval is explicit;
-- load canonical paper state;
-- preserve locked decisions;
-- write only target scope;
-- do not invent support;
-- preserve claim strength;
-- use placeholders only when manuscript-safe and clearly tracked;
-- update claim/section/terminology state;
-- run global audit;
-- report stale dependencies.
+- verify approval for the exact revision;
+- read approved `preview.md` as the authoritative source, not generated TeX/PDF;
+- verify unresolved PDF annotations are resolved or explicitly accepted;
+- preserve locked decisions and claim strength;
+- do not carry review anchors or annotation metadata into `paper/`;
+- write only target scope and do not invent support;
+- update external memory;
+- run global audit including redundancy and defensive-writing checks;
+- report stale dependencies and any required deviation from approved Markdown.
 
 Must not silently reinterpret an unapproved preview as approval.
 
 ### 8.5 `consistency-auditor`
 
-Trigger:
+Trigger for contradiction, semantic duplication, defensive writing, over-expression, information ownership, notation, global alignment, stale-section, reviewer-readiness, or whole-manuscript review. Default read-only.
 
-- contradiction, duplication, notation, global alignment, stale-section, reviewer-readiness, or whole-manuscript review.
+For each finding report severity, category, file/section, exact passages, canonical owner section when relevant, why it matters, one primary action (`KEEP`, `DELETE`, `MERGE`, `COMPRESS`, `RELOCATE`, `REWRITE`), minimal repair, missing evidence, and stale dependencies.
 
-Default read-only.
-
-Required findings format:
-
-- severity: `HIGH`, `MEDIUM`, or `LOW`;
-- category;
-- file and section;
-- conflicting passages or state entries;
-- why it matters;
-- minimal recommended repair;
-- whether evidence is missing;
-- whether another section becomes stale.
-
-Checks must cover central thesis, contribution list, claims, numbers, terminology, equations, references, duplicated explanations, and abstract/introduction/conclusion alignment.
+Check central thesis, contribution list, claims, numbers, terminology, equations, references, semantic duplication across adjacent and non-adjacent sections, paragraph fragmentation, over-expression, defensive writing, and Abstract/Introduction/Discussion/Conclusion alignment. Preserve scientifically necessary assumptions, limitations, boundary conditions, negative results, and caveats.
 
 ### 8.6 `publication-filter`
 
@@ -884,17 +869,19 @@ LOCKED DECISIONS:
 MUST NOT INCLUDE:
 -
 
-OUTPUT:
-- Section thesis
-- Paragraph cards
-- Claim/evidence requirements
-- Proposed equations/figures/tables
-- Dependencies
-- Missing information
-- Assumptions
-- Acceptance checklist
+PREVIEW WORKFLOW:
+- Create `scratch/previews/<preview-id>/preview.md` as the authoritative source.
+- Include paragraph cards with stable IDs and complete unapproved preview prose.
+- Generate and compile `render/preview.tex` / `render/preview.pdf` for visual review.
+- Map PDF annotations back to Markdown, revise Markdown first, regenerate the render, and increment the revision.
+- Do not edit `paper/` or treat a clean PDF as approval.
 
-Do not edit paper/.
+OUTPUT:
+- Preview ID + revision
+- Markdown source and PDF render paths
+- Annotation decisions
+- Dependencies / missing information
+- Acceptance checklist
 ```
 
 ### Apply preview
@@ -904,7 +891,8 @@ MODE: APPLY_PREVIEW
 
 APPROVED PREVIEW:
 - Preview ID:
-- Preview file:
+- Approved revision:
+- Authoritative Markdown: `scratch/previews/<preview-id>/preview.md`
 
 TARGET:
 -
@@ -925,12 +913,19 @@ SCOPE:
 
 CHECKS:
 - contradictions
-- duplicated explanations
+- semantic duplication across sections
+- over-expression and paragraph fragmentation
+- defensive writing and unnecessary historical/scope disclaimers
+- information ownership / canonical owner section
 - terminology and notation
 - claim strength
 - numerical consistency
 - publication leakage
-- abstract/introduction/conclusion alignment
+- abstract/introduction/discussion/conclusion alignment
+
+REPAIR POLICY:
+- Prefer DELETE / MERGE / COMPRESS when meaning already exists elsewhere.
+- Preserve scientifically necessary limitations, assumptions, boundary conditions, negative results, and caveats.
 
 AUTOFIX: NO
 ```
