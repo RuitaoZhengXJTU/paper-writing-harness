@@ -400,7 +400,8 @@ Create:
 - `internal/EVIDENCE_INDEX.yaml`: map verified/provisional results, figures, tables, theorem/proof sources, data-generation scripts, and bibliography sources.
 - `results/manifest.yaml`: classify available result artifacts without moving large data. Every item must include source path, status, provenance, generated-by, manuscript consumers, and verification notes.
 - `internal/README.md`: explain that these files are private project memory and are not manuscript prose.
-- `scratch/README.md`: explain approval semantics.
+- `scratch/README.md`: explain approval semantics and the one-preview-per-directory storage invariant.
+- `scratch/previews/INDEX.md`: initialize a historical preview index and prohibit loose preview/build files at the preview root.
 - `results/README.md`: explain verified versus provisional evidence.
 
 ### External-memory quality gate
@@ -449,7 +450,13 @@ Use when wording, formula, ordering, or a local transformation is specified.
 Use when purpose or structure is known but prose is not approved, including all review iterations on an unapproved preview PDF.
 
 - do not edit `paper/`;
-- create a versioned bundle under `scratch/previews/<preview-id>/`;
+- every NEW preview must receive a NEW unique directory under `scratch/previews/`;
+- prefer preview IDs `YYYYMMDD-HHMM-<section-slug>-<short-id>` and verify the directory does not already exist before creating it;
+- never place preview Markdown, TeX, PDF, annotation, or TeX auxiliary files directly in `scratch/previews/`;
+- never reuse or overwrite another preview directory, even for the same manuscript section;
+- a materially new design alternative creates a new preview directory, while annotation-driven revisions of the same design stay in the existing directory and increment the revision;
+- maintain `scratch/previews/INDEX.md` with preview ID, target, creation time, latest revision, status, and relative path;
+- create the isolated bundle under `scratch/previews/<preview-id>/`;
 - treat `preview.md` as the authoritative editable source;
 - generate `render/preview.tex` and `render/preview.pdf` only as review views;
 - include section thesis, paragraph cards with stable IDs, claim/evidence needs, dependencies, exclusions, assumptions, risks, and complete unapproved preview prose;
@@ -557,6 +564,8 @@ Prefer deletion, merging, compression, or relocation over adding more explanatio
 
 ### 7.8 Preview discipline
 
+`scratch/previews/` is an index-and-directory container, not a shared compilation workspace. Its root may contain only documentation/index files and child preview directories. Every newly created preview must use a fresh unique directory; never write loose `.md`, `.tex`, `.pdf`, annotation, or TeX auxiliary files at the preview root. Prefer `YYYYMMDD-HHMM-<section-slug>-<short-id>`, check for collisions before creation, and never reuse an existing preview ID. Maintain `scratch/previews/INDEX.md` to preserve historical discoverability. Materially new alternatives create new directories; annotation-driven revisions remain in the same directory.
+
 Each preview is a versioned bundle:
 
 ```text
@@ -648,6 +657,8 @@ Must not trigger for open-ended section design or whole-paper stylistic rewritin
 ### 8.3 `section-architect`
 
 Trigger when the user knows section purpose/rough structure but has not approved prose, or provides PDF annotations on an unapproved preview.
+
+For every NEW preview, first create a fresh unique `scratch/previews/<preview-id>/` directory and register it in `scratch/previews/INDEX.md`. Never reuse a previous preview directory or compile multiple previews in a shared working directory. Keep all TeX auxiliary outputs inside that preview's `render/` directory. A materially new alternative gets a new directory; PDF-annotation revisions of the same preview stay in the same directory and increment the revision.
 
 Required bundle under `scratch/previews/<preview-id>/`:
 
