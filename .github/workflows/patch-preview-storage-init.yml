@@ -41,7 +41,6 @@ jobs:
               raise SystemExit('section-architect anchor not found')
           s = s.replace(skill_anchor, skill_replacement, 1)
 
-          # Ensure the future scratch README requirements mention the index.
           other = '- `scratch/README.md`: explain approval semantics.'
           other_new = '- `scratch/README.md`: explain approval semantics and the one-preview-per-directory storage invariant.\n- `scratch/previews/INDEX.md`: initialize a historical preview index and prohibit loose preview/build files at the preview root.'
           if other in s:
@@ -51,7 +50,7 @@ jobs:
               'every NEW preview must receive a NEW unique directory',
               'scratch/previews/INDEX.md',
               'not a shared compilation workspace',
-              'never reuse a previous preview directory',
+              'Never reuse a previous preview directory',
               "TeX auxiliary outputs inside that preview's `render/` directory",
           ]
           for marker in required:
