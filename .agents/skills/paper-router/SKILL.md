@@ -9,16 +9,25 @@ Read `AGENTS.md` and the external-memory files. Select exactly one mode.
 
 | User intent | Mode |
 |---|---|
-| Exact wording, formula, ordering, citation, or local transformation in approved manuscript content | `EXACT_EDIT` |
+| Exact wording, formula, ordering, citation, or bounded local change in approved manuscript content | `EXACT_EDIT` |
 | Desired purpose or rough structure without approved manuscript prose | `DESIGN_PREVIEW` |
 | PDF annotations or review comments on an unapproved preview | `DESIGN_PREVIEW` |
-| Explicit approval of a preview ID and revision for manuscript implementation | `APPLY_PREVIEW` |
-| Consistency, evidence, notation, semantic duplication, defensive writing, over-expression, leakage, reviewer readiness | `AUDIT` |
+| Explicit approval of a preview ID + revision for manuscript implementation | `APPLY_PREVIEW` |
+| Consistency, evidence, notation, duplication, defensive writing, reviewer readiness, or language review without logic changes | `AUDIT` |
 
-For mixed requests, convert every exact instruction into a locked constraint and route the open design to `DESIGN_PREVIEW`. Material ambiguity defaults to `DESIGN_PREVIEW`.
+For `AUDIT`, choose a profile when the user intent is clear:
 
-PDF annotation feedback does not become `EXACT_EDIT` merely because the comment identifies an exact sentence. If the sentence belongs to `scratch/previews/`, keep the work inside the same `DESIGN_PREVIEW` bundle: map the annotation back to `preview.md`, revise Markdown first, regenerate TeX/PDF, and increment the preview revision.
+- terminology precision, wording consistency, factual/professional expression, defensive prose, cadence → `LANGUAGE`;
+- contradictions, duplication, ownership, notation, stale sections → `CONSISTENCY`;
+- claim/evidence/citation/numerical support → `EVIDENCE`;
+- mixed or whole-manuscript review → `FULL`.
 
-Use `APPLY_PREVIEW` only when the user explicitly approves both preview ID and revision. Never infer approval from a clean PDF, absence of comments, or statements such as “looks better” unless they clearly authorize manuscript application.
+For mixed exact/open-design requests, convert exact instructions into locked constraints and route the open portion to `DESIGN_PREVIEW`. Material ambiguity defaults to `DESIGN_PREVIEW`.
 
-State the chosen mode, target, editable scope, locked scope, and required source-of-truth files. Then invoke the matching workflow. Never treat generated preview TeX/PDF as the authoritative source.
+PDF annotation feedback remains `DESIGN_PREVIEW` while the text is still under `scratch/previews/`, even when the comment identifies an exact sentence. Revise the preview Markdown first, regenerate TeX/PDF, and increment the revision.
+
+Use `APPLY_PREVIEW` only after explicit approval of both preview ID and revision.
+
+A request such as “make this section more professional/consistent without changing the logic” should default to `AUDIT PROFILE: LANGUAGE`, not direct rewriting. After the user approves Language Change Ledger items, route their implementation to `EXACT_EDIT`.
+
+State the chosen mode/profile, target, editable scope, locked scope, and required source-of-truth files, then invoke the matching workflow.
