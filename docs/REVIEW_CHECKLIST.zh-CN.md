@@ -17,7 +17,6 @@
 - [ ] 所有已接受 annotation 都先修改 Markdown，再重新生成 TeX/PDF。
 - [ ] `PARTIAL / REJECTED / BLOCKED` annotation 有明确原因。
 - [ ] PDF 中的 review-only 标记不会进入正式论文。
-- [ ] 没有把“PDF 看起来不错”误认为正式批准。
 - [ ] `APPLY_PREVIEW` 使用的是明确批准的 preview ID + revision。
 
 ## 科学与证据
@@ -28,14 +27,18 @@
 - [ ] “may / suggests / designed to”等限定没有被增强。
 - [ ] 没有虚构 citation、baseline、显著性或复杂度结论。
 
-## 论文表达
+## 语言表达
 
-- [ ] 没有本地路径、脚本名、命令、调试过程或 agent 叙述。
-- [ ] 实现细节位于正确层级：正文、附录、仓库文档或 internal。
-- [ ] 术语、缩写、符号和大小写符合 `TERMINOLOGY.yaml`。
-- [ ] 没有说明书式的连续短段把一个完整论证拆碎。
-- [ ] 没有相邻句子用不同措辞重复同一个意思。
-- [ ] 没有无必要的“总结上一段”句子。
+- [ ] 同一技术对象在全文使用一致的 canonical term。
+- [ ] `predict / identify / determine / estimate` 等动词没有造成无意的语义强度漂移。
+- [ ] 表述符合 `TERMINOLOGY.yaml` 和 `PROSE_STYLE.yaml`。
+- [ ] 能用具体 subject + action + object 表述的地方，没有保留空泛的 “improves / enhances / provides superior ...” 评价。
+- [ ] observation、mechanism 和 interpretation 被清楚区分。
+- [ ] 没有不必要的 `It should be noted that`、`This clearly demonstrates` 等 meta/formulaic framing。
+- [ ] 没有连续短句或 micro-paragraph 把完整论证拆成说明书式结构。
+- [ ] hedging 与真实证据强度匹配，既没有过强 claim，也没有空洞的自我保护式 hedging。
+- [ ] Language Change Ledger 中获批准的条目才被 `EXACT_EDIT` 实施。
+- [ ] 语言修改没有改变段落顺序、rhetorical role、claim、因果方向、证据解释、数字、公式、引用、scope 或 limitation。
 
 ## 防御性写作
 
@@ -62,17 +65,18 @@
 - [ ] 改动影响到的章节已更新或标记 stale。
 - [ ] 不同章节中的结果数字和方法名称一致。
 
-## Audit 处理原则
+## Audit
 
 - [ ] AUDIT 默认为只读，没有未经批准直接重写。
+- [ ] 选择了适合的 `FULL / LANGUAGE / CONSISTENCY / EVIDENCE` profile。
 - [ ] 对冗余优先考虑 `DELETE / MERGE / COMPRESS`，而不是添加更多说明。
 - [ ] duplication finding 指明了 canonical owner section。
 - [ ] defensive-writing finding 与真正必要的 limitation/caveat 被区分开。
+- [ ] LANGUAGE profile 返回的是 Language Change Ledger，而不是整节重写稿。
 - [ ] HIGH/MEDIUM finding 已处理或明确接受风险。
 
 ## 技术验收
 
 - [ ] Preview PDF 和/或正式论文构建通过，或失败原因被准确记录。
 - [ ] `git diff` 中没有非预期大范围变化。
-- [ ] 审计报告的 HIGH/MEDIUM 问题已处理或记录。
 - [ ] 最终提交只包含本轮确认过的文件。
