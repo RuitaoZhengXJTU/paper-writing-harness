@@ -2,107 +2,103 @@
 
 ```text
 MODE: AUDIT
+AUDIT PROFILE: FULL | LANGUAGE | CONSISTENCY | EVIDENCE
 
 SCOPE:
 - Target files or whole manuscript:
 - Include adjacent/dependent sections: YES
-- Include whole-manuscript semantic duplication scan: YES / NO
+- Include whole-manuscript scan: YES / NO
 
 AUTOFIX: NO
 
-AUDIT PRINCIPLE:
-- Prefer subtraction over defensive addition.
-- Distinguish necessary scientific explanation from agent-generated over-explanation.
-- Do not treat repeated wording as the only form of duplication; detect semantically repeated explanations across different wording.
-- Do not flag intentional high-level recurrence in Abstract / Introduction / Discussion / Conclusion when each occurrence serves a distinct rhetorical role and is materially compressed relative to the canonical explanatory section.
+GLOBAL RULES:
+- Read `PAPER_CONTRACT`, `SECTION_CONTRACTS`, `CLAIM_LEDGER`, `TERMINOLOGY`, and `PROSE_STYLE` when relevant.
+- Preserve scientific meaning, claim strength, evidence interpretation, and rhetorical ownership.
+- Prefer subtraction over defensive addition when meaning is already present.
+- Do not rewrite `paper/` during AUDIT.
 
-CHECKS:
+PROFILE: FULL
+Run all checks below.
 
-A. SCIENTIFIC AND STATE CONSISTENCY
-- central contribution and scope
-- contradictions
-- terminology and notation
-- claim strength and evidence
-- numerical consistency
-- equations, figures, tables, citations, and references
-- publication-boundary leakage
-- stale abstract/introduction/discussion/conclusion statements
+PROFILE: CONSISTENCY
+Check:
+- central contribution and scope;
+- contradictions and stale statements;
+- terminology/notation consistency;
+- numerical consistency;
+- equations, figures, tables, citations, and references;
+- semantic duplication and canonical information ownership;
+- paragraph/section responsibility drift;
+- publication-boundary leakage.
 
-B. OVER-EXPRESSION
-Flag prose that adds words without adding a new claim, mechanism, evidence, qualification, or interpretation, including:
-- adjacent sentences that restate the same point;
-- paragraphs that summarize what the immediately preceding paragraph already established;
-- repeated contribution or motivation statements;
-- obvious implications spelled out unnecessarily;
-- excessive roadmap, transition, or framing language;
-- multiple sentences that could be merged without loss of scientific meaning;
-- repeated explanations of standard concepts already defined elsewhere;
-- report/manual-style micro-paragraphs that fragment one argumentative move.
+For repeated ideas, identify one canonical owner section and recommend one primary action:
+`KEEP`, `DELETE`, `MERGE`, `COMPRESS`, `RELOCATE`, or `REWRITE`.
 
-C. DEFENSIVE WRITING
-Flag prose written mainly to pre-empt hypothetical objections rather than advance the paper, including:
-- explaining historical, abandoned, or rejected approaches that are no longer part of the method;
-- repeatedly stating what the proposed method does NOT do;
-- formulations such as “unlike the previous version,” “without using X,” or “this should not be confused with Y” when X/Y are not necessary for the current paper narrative;
-- unnecessary justification of routine design choices;
-- repeated scope disclaimers or caveats that do not materially change interpretation;
-- meta-writing that explains why a passage is written a certain way;
-- excessive hedging added for self-protection rather than calibrated uncertainty.
+PROFILE: EVIDENCE
+Check:
+- claim strength versus available evidence;
+- verified versus provisional result use;
+- unsupported causal or guarantee language;
+- citation support;
+- numerical provenance;
+- assumptions/limitations required for valid interpretation;
+- stale claims after result or method changes.
 
-Do NOT remove a limitation, assumption, boundary condition, or negative result merely because it sounds defensive. Keep it when it changes scientific interpretation, validity, reproducibility, or reviewer understanding.
+PROFILE: LANGUAGE
+Use the `academic-language-reviewer` skill and apply a strict LOGIC LOCK.
 
-D. CROSS-SECTION DUPLICATION AND INFORMATION OWNERSHIP
-For every repeated idea:
-1. identify the canonical owner section using `SECTION_CONTRACTS.yaml`, `CLAIM_LEDGER.yaml`, and the manuscript's rhetorical structure;
-2. distinguish FULL EXPLANATION from NECESSARY REFERENCE;
-3. preserve the full explanation only in the owner section unless repetition is scientifically required;
-4. recommend compression, cross-reference, or deletion elsewhere;
-5. check not only adjacent paragraphs but non-adjacent sections that describe the same mechanism, motivation, result, limitation, or contribution in different words.
+Do not change or recommend changes to:
+- section/paragraph order;
+- paragraph rhetorical role;
+- central claim;
+- claim strength or causal direction;
+- evidence interpretation;
+- numbers, equations, or citations;
+- assumptions, limitations, scope, or methodological meaning.
 
-Typical ownership pattern:
-- Introduction: motivation, gap, contribution-level summary.
-- Method: full mechanism/formulation/algorithm explanation.
-- Experiments: setup needed to interpret evidence and the evidence itself.
-- Discussion: interpretation, limitations, implications—not a second Method section.
-- Conclusion: compressed synthesis—not a repeated Introduction.
+Check:
+- `TERM_AMBIGUITY`: technical term is vague or overloaded;
+- `TERM_DRIFT`: same object is named inconsistently;
+- `SEMANTIC_DRIFT`: wording changes technical meaning or claim strength;
+- `VAGUE_ACADEMICISM`: generic claims such as “improves flexibility” replace concrete supported descriptions;
+- `DEFENSIVE_PROSE`: abandoned versions, negative definitions, hypothetical objections, or unnecessary disclaimers;
+- `META_PROSE`: prose about how the paper is written rather than the science;
+- `AI_FORMULAIC_PROSE`: generic repeated emphasis/summary templates;
+- `COLLOCATION`: grammatically valid but technically unnatural word combinations;
+- `CADENCE`: choppy short sentences, micro-paragraphs, or report/manual rhythm;
+- `OVER_NOMINALIZATION`;
+- `UNNEEDED_HEDGING` / `UNDER_HEDGING`;
+- `REDUNDANT_SIGNALING`.
 
-E. PARAGRAPH-LEVEL ACADEMIC COHESION
-- paragraphs too short to complete one argumentative/explanatory move;
-- adjacent paragraphs that should be merged;
-- abrupt topic shifts;
-- repeated “This...” summary sentences;
-- slogan-like or generic paragraph endings;
-- prose that reads like a checklist, report, or manual rather than continuous academic argument.
+Prefer evidence-proximal prose: concrete subject + action + object statements, mechanism-specific wording, direct reporting of observations, and clear separation between observation and interpretation.
 
-REPAIR POLICY:
-For each finding recommend exactly one primary action:
-- KEEP
-- DELETE
-- MERGE
-- COMPRESS
-- RELOCATE
-- REWRITE
+LANGUAGE OUTPUT — LANGUAGE CHANGE LEDGER:
+For each proposed change provide:
+- ID: L001, L002, ...
+- Location.
+- Category.
+- Current wording.
+- Suggested wording.
+- Reason.
+- Canonical term / PROSE_STYLE rule when relevant.
+- Logic impact: `NONE` or `LOGIC_REVIEW_REQUIRED`.
+- Confidence: HIGH / MEDIUM / LOW.
 
-Prefer DELETE / MERGE / COMPRESS when meaning is already present elsewhere. Do not solve redundancy by adding new explanatory prose.
+Do not provide a fully rewritten section. Do not propose stylistic alternatives with no clear precision/readability gain.
 
-OUTPUT:
-For each finding provide:
+FULL OUTPUT:
+For non-language findings provide:
 - Severity: HIGH / MEDIUM / LOW.
-- Category: scientific consistency / over-expression / defensive writing / duplication / ownership / cohesion / leakage / evidence / notation / other.
+- Category.
 - File and section.
-- Exact passage(s) involved.
-- Canonical owner section when duplication is involved.
-- Why the passage is necessary, redundant, defensive, or misplaced.
+- Exact passage(s) or state entries.
+- Canonical owner section when relevant.
+- Why it matters.
 - Primary repair action.
 - Minimal repair strategy.
-- Evidence, claim, or dependency affected.
+- Evidence/claim/dependency affected.
 
-Then provide a short summary:
-- Highest-value deletions/compressions.
-- Repeated ideas and their canonical homes.
-- Defensive passages that should disappear from the paper narrative.
-- Legitimate limitations/caveats that must be preserved.
-- Sections that become stale if the recommended repairs are accepted.
+If LANGUAGE findings are present, append a separate Language Change Ledger.
 
-Do not rewrite the manuscript unless a later task explicitly authorizes the repairs.
+Do not modify the manuscript. Approved language ledger items must be implemented later with `MODE: EXACT_EDIT`.
 ```
