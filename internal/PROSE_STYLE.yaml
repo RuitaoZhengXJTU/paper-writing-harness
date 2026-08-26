@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "target": "factual_academic",
+  "principles": [
+    "preserve_scientific_meaning",
+    "prefer_evidence_proximal_expression",
+    "prefer_concrete_subject_action_object_statements",
+    "preserve_claim_strength_and_hedging",
+    "use_canonical_technical_terms",
+    "maintain_continuous_argumentative_prose"
+  ],
+  "sentence": {
+    "prefer_explicit_scientific_subjects": true,
+    "prefer_concrete_verbs": true,
+    "avoid_empty_nominalization": true,
+    "avoid_generic_evaluative_claims": true,
+    "avoid_formulaic_emphasis": true
+  },
+  "paragraph": {
+    "unit": "complete_rhetorical_move",
+    "avoid_micro_paragraphs": true,
+    "merge_redundant_adjacent_paragraphs": true,
+    "avoid_immediate_restatement": true
+  },
+  "hedging": {
+    "preserve_evidence_boundedness": true,
+    "avoid_unearned_certainty": true,
+    "avoid_empty_self_protective_hedging": true
+  },
+  "terminology": {
+    "canonical_source": "internal/TERMINOLOGY.yaml",
+    "avoid_accidental_synonym_drift": true,
+    "preserve_real_technical_distinctions": true
+  },
+  "avoid_patterns": [
+    "It should be noted that",
+    "It is worth mentioning that",
+    "It is important to note that",
+    "This clearly demonstrates",
+    "This further highlights",
+    "It is evident that",
+    "In essence",
+    "Taken together",
+    "repeated Furthermore/Moreover/Importantly framing",
+    "generic improves/enhances/provides superior claims without a concrete supported mechanism or result"
+  ],
+  "preferred_patterns": [
+    "concrete subject + action + object descriptions",
+    "mechanism-specific statements",
+    "direct reporting of observed results",
+    "explicit separation of observation from interpretation",
+    "concise references to concepts fully explained in their canonical owner section"
+  ]
+}
