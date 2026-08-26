@@ -1,150 +1,408 @@
 # Paper Writing Harness
 
-一个面向 Codex/代码型写作 Agent 的学术论文写作模板，用于把论文正文、项目分析、写作预览、实验依据和长期状态分离管理。
+A repository-scoped workflow for using Codex/LLM agents to write and revise academic papers with explicit state, review gates, and reproducible editing rules.
 
-它主要解决五类问题：
-
-1. Agent 把本地脚本、运行流程和项目分析写进论文；
-2. 局部修改造成前后矛盾、重复叙述和术语漂移；
-3. 精确改写与开放式结构设计被混为一谈；
-4. 流畅的 AI 预览被误认为已批准、已验证的正式论文内容；
-5. Agent 通过过度表达、防御性写作和跨章节重复，把论文写成说明书或报告而不是连续学术论证。
-
-## 两种使用方式
-
-### 已有论文仓库
-
-1. 用 Codex 打开已有论文仓库根目录。
-2. 打开 [`prompts/INITIALIZE_EXISTING_REPOSITORY.md`](prompts/INITIALIZE_EXISTING_REPOSITORY.md)。
-3. 复制全文到新的 Agent 会话。
-4. 让 Agent 执行迁移、初始化外部记忆、创建 skills/hooks 并运行验证。
-5. 人工检查 `git diff`，确认后再提交。
-
-这份初始化 Prompt 默认禁止 Agent commit、push、删除未确认文件或静默改写论文科学内容。
-
-### 新论文项目
-
-复制或使用此仓库作为模板，然后：
-
-1. 把论文源文件放入 `paper/`；
-2. 补充 `internal/PAPER_CONTRACT.yaml`；
-3. 让 Agent 根据论文草稿初始化其余外部记忆；
-4. 按四种修改模式推进写作。
-
-## 四种修改模式
-
-| 模式 | 什么时候使用 | 是否直接改正文 |
-|---|---|---|
-| `EXACT_EDIT` | 已明确具体措辞、公式、顺序或局部变化 | 是，最小 diff |
-| `DESIGN_PREVIEW` | 结构仍在设计，或正在对 preview PDF 做 annotation 迭代 | 否，只改 `scratch/previews/` |
-| `APPLY_PREVIEW` | 已明确批准某个 preview ID + revision | 是，仅实施批准范围 |
-| `AUDIT` | 检查科学一致性、重复、防御性写作、过度表达、证据、术语和泄漏 | 默认只读 |
-
-完整操作说明见 [`docs/SINGLE_EDIT_WORKFLOW.zh-CN.md`](docs/SINGLE_EDIT_WORKFLOW.zh-CN.md)。
-
-## DESIGN_PREVIEW：PDF 看，Markdown 改
-
-Preview 采用双表示流程：
+Core workflow:
 
 ```text
-Markdown = authoritative editable source
-TeX      = generated render source
-PDF      = visual review interface
+exact change      → EXACT_EDIT
+open design       → DESIGN_PREVIEW → PDF review → approval → APPLY_PREVIEW
+quality review    → AUDIT → approve findings → EXACT_EDIT
 ```
 
-标准循环：
+## Quick start
+
+### Existing paper repository
+
+1. Open the repository root in Codex.
+2. Copy [`prompts/INITIALIZE_EXISTING_REPOSITORY.md`](prompts/INITIALIZE_EXISTING_REPOSITORY.md) into a new agent session.
+3. Review the generated repository migration and external-memory files.
+4. Continue writing with the four modes below.
+
+### New paper repository
+
+Use this repository as a template, place manuscript sources under `paper/`, then initialize:
+
+- `internal/PAPER_CONTRACT.yaml`
+- `internal/SECTION_CONTRACTS.yaml`
+- `internal/CLAIM_LEDGER.yaml`
+- `internal/TERMINOLOGY.yaml`
+- `internal/PROSE_STYLE.yaml`
+
+## Four modes
+
+| Mode | Use when | Writes `paper/`? |
+|---|---|---:|
+| `EXACT_EDIT` | The desired local change is already known | Yes |
+| `DESIGN_PREVIEW` | Structure/prose is still being designed or reviewed | No |
+| `APPLY_PREVIEW` | A specific preview ID + revision has been approved | Yes |
+| `AUDIT` | Reviewing consistency, evidence, language, redundancy, or readiness | No |
+
+---
+
+# 1. EXACT_EDIT
+
+Use for bounded changes to approved manuscript content. Unspecified content remains locked.
+
+## Complete example
 
 ```text
-preview.md
-→ compile preview.pdf
-→ PDF annotation
-→ map annotation back to Markdown
-→ edit preview.md
-→ regenerate TeX/PDF
-→ repeat until explicit approval
+MODE: EXACT_EDIT
+
+TARGET:
+- File: paper/sections/method.tex
+- Section: 3.2 Guidance construction
+- Target paragraphs: paragraphs 2–3
+
+REQUIRED CHANGES:
+1. Replace the current description of “migration links” with the canonical term “candidate migration arcs”.
+2. Rewrite the first sentence of paragraph 3 to state directly that the learning model outputs guidance constraints for the screened stochastic program.
+3. Remove the redundant final sentence of paragraph 3 because it repeats the same mechanism.
+
+LOCKED CONTENT:
+- Preserve paragraph order.
+- Preserve Eq. (8), Eq. (9), all citations, labels, numerical values, and claim strength.
+- Do not modify paragraphs outside the target range.
+- Do not introduce new results, comparisons, or implementation details.
+
+ALLOWED COLLATERAL CHANGES:
+- Grammar or agreement repairs directly required by the requested edits.
+- Terminology updates inside the target span required for consistency.
+
+GLOBAL CONSISTENCY:
+- Check whether “migration links” appears elsewhere with the same technical meaning.
+- Report affected locations but do not modify them automatically.
+
+ACCEPTANCE CRITERIA:
+- The target passage consistently uses “candidate migration arcs”.
+- The learning-model output is described once and directly.
+- No scientific meaning, evidence, equation, citation, or paragraph responsibility changes.
+
+OUTPUT:
+- Apply the minimum sufficient diff.
+- Show changed files and any stale dependent sections.
 ```
 
-即使 PDF annotation 精确到了一个词或一句话，只要内容仍属于未批准 preview，就继续使用 `DESIGN_PREVIEW`，不要误切换到 `EXACT_EDIT`。
-
-快速说明见 [`docs/PREVIEW_PDF_REVIEW_WORKFLOW.zh-CN.md`](docs/PREVIEW_PDF_REVIEW_WORKFLOW.zh-CN.md)。
-
-## AUDIT：subtraction-first
-
-Audit 不只检查“有没有错误”，还检查论文是否说得太多。
-
-重点寻找：
-
-- 相邻句子或段落重复同一语义；
-- 不同章节用不同措辞反复解释同一机制、贡献或 limitation；
-- 已弃用历史方法通过“当前方法没有 X”的形式重新进入正文；
-- 为假想 reviewer objection 写出的 disclaimer 或预防性解释；
-- 一个完整论证被拆成多个短小说明书式段落。
-
-默认修复优先级：
+Recommended review:
 
 ```text
-DELETE / MERGE / COMPRESS
-before
-adding more explanation
-```
-
-真正影响 validity、interpretation、reproducibility 的 assumptions、limitations、boundary conditions 和 caveats 不应被误删。
-
-## 常用入口
-
-- 初始化已有仓库：[`prompts/INITIALIZE_EXISTING_REPOSITORY.md`](prompts/INITIALIZE_EXISTING_REPOSITORY.md)
-- 精确修改模板：[`prompts/EXACT_EDIT.md`](prompts/EXACT_EDIT.md)
-- 结构预览模板：[`prompts/DESIGN_PREVIEW.md`](prompts/DESIGN_PREVIEW.md)
-- 应用预览模板：[`prompts/APPLY_PREVIEW.md`](prompts/APPLY_PREVIEW.md)
-- 只读审计模板：[`prompts/AUDIT.md`](prompts/AUDIT.md)
-- PDF Preview Review 速查：[`docs/PREVIEW_PDF_REVIEW_WORKFLOW.zh-CN.md`](docs/PREVIEW_PDF_REVIEW_WORKFLOW.zh-CN.md)
-- 单次修改流程：[`docs/SINGLE_EDIT_WORKFLOW.zh-CN.md`](docs/SINGLE_EDIT_WORKFLOW.zh-CN.md)
-- Review 清单：[`docs/REVIEW_CHECKLIST.zh-CN.md`](docs/REVIEW_CHECKLIST.zh-CN.md)
-- Harness 原理：[`docs/HARNESS_DESIGN.zh-CN.md`](docs/HARNESS_DESIGN.zh-CN.md)
-
-## 目录职责
-
-```text
-paper/       reviewer-facing manuscript
-internal/    项目外部记忆、claim/evidence、决策和审计状态
-scratch/     未批准的 preview Markdown、review PDF、annotation 决策和探索稿
-results/     verified / provisional 结果与来源清单
-.agents/     Codex repository-scoped skills
-.codex/      可选 hooks 和静态检查脚本
-```
-
-## 最小日常流程
-
-### 精确修改
-
-```text
-EXACT_EDIT → diff review → AUDIT → compile → commit
-```
-
-### 结构性修改
-
-```text
-DESIGN_PREVIEW Markdown
-→ render PDF
-→ PDF annotation
-→ edit Markdown
-→ regenerate PDF
-→ explicit approval
-→ APPLY_PREVIEW
-→ AUDIT
-→ compile + git diff
+git diff
+→ optional AUDIT
+→ compile
 → commit
 ```
 
-最重要的默认规则：
+---
 
-- 不确定时只生成 preview，不改论文；
-- Preview PDF 用来直观看，Markdown 才是修改源；
-- 精确修改时锁定未指定内容，只接受最小 diff；
-- 正式更新后做只读 audit；
-- Audit 优先删除、合并和压缩冗余，而不是写更多防御性解释；
-- 聊天记忆不是论文状态数据库，`internal/` 才是。
+# 2. DESIGN_PREVIEW
 
-## 安全说明
+Use when the section purpose is known but the structure/prose is not yet approved, including all PDF-annotation iterations on an active preview.
 
-`.codex/hooks.json` 和 `.codex/hooks/` 是参考实现。项目首次打开时，先阅读脚本再信任或启用 hooks。静态检查是启发式 guardrail，不能替代作者对科学正确性、语义重复和防御性写作的判断。
+Each new preview receives its own directory:
+
+```text
+scratch/previews/<preview-id>/
+├── preview.md
+├── render/
+│   ├── preview.tex
+│   └── preview.pdf
+└── review/
+    └── decisions.md
+```
+
+`scratch/previews/INDEX.md` is the history index.
+
+## Complete example
+
+```text
+MODE: DESIGN_PREVIEW
+
+TARGET SECTION:
+- Proposed location: paper/sections/method.tex
+- Section: 3.3 Screened stochastic program
+- Intended role: explain how learning outputs modify the stochastic program without repeating the learning-model architecture
+- Preceding context: Section 3.2 defines the learning outputs
+- Following context: Section 3.4 describes the rolling-window solution procedure
+
+SECTION MUST EXPLAIN:
+1. What information is received from the learning model.
+2. How that information enters the stochastic program as guidance constraints.
+3. What part of the original stochastic program remains unchanged.
+4. Why the resulting optimization problem is smaller/easier to solve, only to the extent supported by the formulation or verified evidence.
+
+AVAILABLE VERIFIED MATERIAL:
+- Claims: C007, C008
+- Equations: current stochastic-program formulation in Section 3.3
+- Results: only results marked verified in results/manifest.yaml
+- Figures: framework figure showing Learning model → guidance constraints → Screened SP
+
+LOCKED DECISIONS:
+- Use “Learning-Assisted Screened Stochastic Programming (LA-SSP)” as the method name.
+- Use “Learning model” as the component name.
+- Treat predicted outputs as guidance constraints.
+- Do not claim global optimality.
+
+MUST NOT INCLUDE:
+- Local scripts or solver commands.
+- Historical method names that are no longer part of the paper.
+- A second explanation of the learning-model architecture.
+- Unsupported runtime or complexity claims.
+
+PREVIEW REQUIREMENTS:
+- Create a NEW unique preview directory under scratch/previews/.
+- Register it in scratch/previews/INDEX.md.
+- Write the authoritative source to preview.md.
+- Generate render/preview.tex from preview.md.
+- Compile render/preview.pdf inside the same preview directory.
+- Keep TeX auxiliary files inside render/.
+
+PREVIEW.MD CONTENT:
+- Preview ID + revision R1.
+- Section thesis.
+- Paragraph cards with stable P01, P02, ... IDs.
+- Claim–evidence mapping.
+- Complete unapproved preview prose.
+- Assumptions, exclusions, missing evidence, dependencies.
+- Acceptance checklist.
+
+PDF REVIEW LOOP:
+- PDF annotations are revision requests, not approval.
+- Map every annotation back to preview.md.
+- Record ACCEPTED / PARTIAL / REJECTED / BLOCKED decisions in review/decisions.md.
+- Revise preview.md first.
+- Regenerate TeX/PDF and increment the revision.
+
+APPROVAL:
+- Do not edit paper/ until I explicitly approve both preview ID and revision.
+
+OUTPUT REPORT:
+- Preview ID and revision.
+- Preview directory.
+- Markdown source path.
+- PDF path and build status.
+- Current INDEX.md status.
+- Unresolved/blocked review items.
+```
+
+Typical loop:
+
+```text
+preview.md R1
+→ preview.pdf R1
+→ PDF annotations
+→ preview.md R2
+→ preview.pdf R2
+→ ...
+→ explicit approval
+```
+
+Detailed guide: [`docs/PREVIEW_PDF_REVIEW_WORKFLOW.zh-CN.md`](docs/PREVIEW_PDF_REVIEW_WORKFLOW.zh-CN.md)
+
+---
+
+# 3. APPLY_PREVIEW
+
+Use only after a preview ID and revision have been explicitly approved.
+
+## Complete example
+
+```text
+MODE: APPLY_PREVIEW
+
+APPROVED PREVIEW:
+- Preview ID: 20260825-1154-method-screening-a7f3
+- Revision: R4
+- Source: scratch/previews/20260825-1154-method-screening-a7f3/preview.md
+
+TARGET:
+- File: paper/sections/method.tex
+- Section: 3.3 Screened stochastic program
+
+LOCKED PREVIEW DECISIONS:
+1. Keep the approved four-paragraph structure.
+2. Use “guidance constraints” consistently.
+3. Do not discuss deprecated method variants.
+4. Do not add runtime, optimality, or performance claims beyond verified evidence.
+5. Preserve existing equation numbers and citations unless integration requires a purely syntactic repair.
+
+IMPLEMENTATION RULES:
+- Read the approved preview.md as the source of truth.
+- Implement only the approved revision.
+- Do not copy review anchors, annotations, revision metadata, or generated TeX markup into the manuscript.
+- Preserve unrelated manuscript content.
+- Do not silently redesign the approved prose.
+- Update CLAIM_LEDGER, SECTION_CONTRACTS, TERMINOLOGY, and stale-state files only when the approved manuscript state requires it.
+
+VALIDATION:
+- Compare the implemented section with the approved preview.md.
+- Run publication, evidence, terminology, language-consistency, reference, and build checks.
+- Report any integration change that differs from the approved preview.
+
+OUTPUT:
+- Changed files.
+- Validation result.
+- Differences from the approved preview, if any.
+- Stale dependent sections.
+```
+
+Recommended next step:
+
+```text
+AUDIT → review findings → optional EXACT_EDIT
+```
+
+---
+
+# 4. AUDIT
+
+`AUDIT` is read-only. Select a profile:
+
+```text
+FULL         = whole quality pass
+CONSISTENCY  = contradictions, duplication, ownership, terminology/notation, stale state
+EVIDENCE     = claims, results, citations, numbers, assumptions/limitations
+LANGUAGE     = terminology precision, wording consistency, professional factual prose
+```
+
+## Complete example — FULL
+
+```text
+MODE: AUDIT
+AUDIT PROFILE: FULL
+
+SCOPE:
+- Files changed in the current manuscript revision.
+- Include adjacent and declared dependent sections: YES
+- Include whole-manuscript semantic duplication scan: YES
+
+AUTOFIX: NO
+
+CHECKS:
+- Central contribution and scope consistency.
+- Claim strength and evidence support.
+- Numerical, terminology, notation, equation, citation, figure, and table consistency.
+- Semantic duplication across non-adjacent sections.
+- Canonical information ownership.
+- Over-expression and report/manual-style micro-paragraphs.
+- Defensive prose and unnecessary historical/internal framing.
+- Publication-boundary leakage.
+- Language precision and professional factual expression.
+
+REPAIR POLICY:
+- Prefer KEEP / DELETE / MERGE / COMPRESS / RELOCATE / REWRITE as a single primary action per finding.
+- Do not edit paper/.
+
+OUTPUT:
+- HIGH / MEDIUM / LOW findings.
+- Exact locations and passages.
+- Canonical owner when duplication is involved.
+- Minimal repair strategy.
+- A separate Language Change Ledger for language findings.
+```
+
+## Complete example — LANGUAGE
+
+Use this when the logic is already accepted and only the wording should be reviewed.
+
+```text
+MODE: AUDIT
+AUDIT PROFILE: LANGUAGE
+
+SCOPE:
+- File: paper/sections/method.tex
+- Section: 3.2–3.3
+- Compare parallel terminology with the rest of the manuscript: YES
+
+AUTOFIX: NO
+
+LOGIC LOCK:
+- Preserve section and paragraph order.
+- Preserve each paragraph's rhetorical role.
+- Preserve claims, claim strength, causal direction, evidence interpretation, numbers, equations, citations, assumptions, limitations, and methodological meaning.
+
+CHECKS:
+- TERM_AMBIGUITY
+- TERM_DRIFT
+- SEMANTIC_DRIFT
+- VAGUE_ACADEMICISM
+- DEFENSIVE_PROSE
+- META_PROSE
+- AI_FORMULAIC_PROSE
+- COLLOCATION
+- CADENCE
+- OVER_NOMINALIZATION
+- UNNEEDED_HEDGING / UNDER_HEDGING
+- REDUNDANT_SIGNALING
+
+STYLE SOURCE:
+- internal/TERMINOLOGY.yaml
+- internal/PROSE_STYLE.yaml
+
+OUTPUT:
+Return a Language Change Ledger only:
+- ID: L001, L002, ...
+- Location.
+- Category.
+- Current wording.
+- Suggested wording.
+- Reason.
+- Canonical term/style rule.
+- Logic impact: NONE or LOGIC_REVIEW_REQUIRED.
+- Confidence.
+
+Do not rewrite the full section and do not modify paper/.
+```
+
+After review:
+
+```text
+APPROVE: L001, L003, L006
+REJECT: L002
+```
+
+Then apply approved items with `EXACT_EDIT` only.
+
+Language workflow: [`docs/LANGUAGE_REVIEW_WORKFLOW.zh-CN.md`](docs/LANGUAGE_REVIEW_WORKFLOW.zh-CN.md)
+
+---
+
+## Repository map
+
+```text
+paper/                   manuscript
+internal/                paper state, claims, terminology, prose style
+scratch/previews/        isolated preview history + PDF review bundles
+results/                 verified/provisional evidence
+.agents/skills/          reusable writing/review workflows
+.codex/                  hooks and deterministic guards
+prompts/                  copy-ready mode prompts
+docs/                    workflow guides
+```
+
+Key files:
+
+- [`AGENTS.md`](AGENTS.md)
+- [`internal/TERMINOLOGY.yaml`](internal/TERMINOLOGY.yaml)
+- [`internal/PROSE_STYLE.yaml`](internal/PROSE_STYLE.yaml)
+- [`prompts/EXACT_EDIT.md`](prompts/EXACT_EDIT.md)
+- [`prompts/DESIGN_PREVIEW.md`](prompts/DESIGN_PREVIEW.md)
+- [`prompts/APPLY_PREVIEW.md`](prompts/APPLY_PREVIEW.md)
+- [`prompts/AUDIT.md`](prompts/AUDIT.md)
+- [`docs/SINGLE_EDIT_WORKFLOW.zh-CN.md`](docs/SINGLE_EDIT_WORKFLOW.zh-CN.md)
+- [`docs/PREVIEW_PDF_REVIEW_WORKFLOW.zh-CN.md`](docs/PREVIEW_PDF_REVIEW_WORKFLOW.zh-CN.md)
+- [`docs/LANGUAGE_REVIEW_WORKFLOW.zh-CN.md`](docs/LANGUAGE_REVIEW_WORKFLOW.zh-CN.md)
+
+## Daily workflows
+
+```text
+Exact revision:
+EXACT_EDIT → diff review → optional AUDIT → compile → commit
+
+Structural revision:
+DESIGN_PREVIEW → PDF review loop → approve preview ID + revision
+→ APPLY_PREVIEW → AUDIT → EXACT_EDIT if needed → compile → commit
+
+Language revision:
+AUDIT: LANGUAGE → Language Change Ledger → approve IDs
+→ EXACT_EDIT → diff review → compile
+```
