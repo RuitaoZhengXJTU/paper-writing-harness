@@ -138,6 +138,7 @@ Adapt the structure to the detected authoring format, but converge on the follow
 │   ├── SECTION_CONTRACTS.yaml
 │   ├── CLAIM_LEDGER.yaml
 │   ├── TERMINOLOGY.yaml
+│   ├── PROSE_STYLE.yaml
 │   ├── DECISIONS.md
 │   ├── CHANGELOG.md
 │   ├── STALE_SECTIONS.yaml
@@ -167,6 +168,8 @@ Adapt the structure to the detected authoring format, but converge on the follow
 │       ├── manuscript-composer/
 │       │   └── SKILL.md
 │       ├── consistency-auditor/
+│       │   └── SKILL.md
+│       ├── academic-language-reviewer/
 │       │   └── SKILL.md
 │       └── publication-filter/
 │           └── SKILL.md
@@ -398,6 +401,7 @@ Create:
 - `internal/CHANGELOG.md`: initialize with this harness migration and reserve a consistent entry format for future manuscript changes.
 - `internal/STALE_SECTIONS.yaml`: initialize every detected section as `current`, except sections already found inconsistent; include reasons and triggering claims.
 - `internal/EVIDENCE_INDEX.yaml`: map verified/provisional results, figures, tables, theorem/proof sources, data-generation scripts, and bibliography sources.
+- `internal/PROSE_STYLE.yaml`: define concise factual-academic prose rules, evidence-proximal expression, paragraph/cadence rules, hedging policy, and common language anti-patterns. Keep it compact and use `TERMINOLOGY.yaml` as the canonical technical vocabulary source.
 - `results/manifest.yaml`: classify available result artifacts without moving large data. Every item must include source path, status, provenance, generated-by, manuscript consumers, and verification notes.
 - `internal/README.md`: explain that these files are private project memory and are not manuscript prose.
 - `scratch/README.md`: explain approval semantics and the one-preview-per-directory storage invariant.
@@ -477,7 +481,9 @@ Use only after explicit approval of both preview ID and revision.
 
 #### `AUDIT`
 
-Use for consistency, semantic duplication, defensive writing, over-expression, information ownership, notation, evidence, publication boundary, or reviewer-readiness checks.
+Use for consistency, semantic duplication, defensive writing, over-expression, information ownership, notation, evidence, publication boundary, language quality, or reviewer-readiness checks.
+
+Select an audit profile when possible: `FULL`, `LANGUAGE`, `CONSISTENCY`, or `EVIDENCE`. Requests to make prose more professional, precise, consistent, factual, or natural without changing logic should use `AUDIT PROFILE: LANGUAGE`.
 
 - read-only by default;
 - prefer subtraction over defensive addition;
@@ -504,6 +510,7 @@ Before manuscript edits, read:
 - `internal/SECTION_CONTRACTS.yaml`
 - `internal/CLAIM_LEDGER.yaml`
 - `internal/TERMINOLOGY.yaml`
+- `internal/PROSE_STYLE.yaml`
 - target section;
 - adjacent sections;
 - declared dependent sections.
@@ -697,7 +704,27 @@ For each finding report severity, category, file/section, exact passages, canoni
 
 Check central thesis, contribution list, claims, numbers, terminology, equations, references, semantic duplication across adjacent and non-adjacent sections, paragraph fragmentation, over-expression, defensive writing, and Abstract/Introduction/Discussion/Conclusion alignment. Preserve scientifically necessary assumptions, limitations, boundary conditions, negative results, and caveats.
 
-### 8.6 `publication-filter`
+### 8.6 `academic-language-reviewer`
+
+Trigger:
+
+- `AUDIT PROFILE: LANGUAGE`;
+- terminology precision or wording-consistency review;
+- professional/factual academic expression review without changing argument logic;
+- defensive/meta prose, vague academicism, collocation, cadence, hedging, or formulaic AI-language review.
+
+Required behavior:
+
+- read-only; never edit `paper/`;
+- read `TERMINOLOGY.yaml`, `PROSE_STYLE.yaml`, claim/section contracts, target text, adjacent text, and parallel descriptions elsewhere;
+- apply a strict LOGIC LOCK: do not change section/paragraph order, rhetorical role, central claim, claim strength, causal direction, evidence interpretation, numbers, equations, citations, assumptions, limitations, scope, methodological meaning, or argument dependencies;
+- check `TERM_AMBIGUITY`, `TERM_DRIFT`, `SEMANTIC_DRIFT`, `VAGUE_ACADEMICISM`, `DEFENSIVE_PROSE`, `META_PROSE`, `AI_FORMULAIC_PROSE`, `COLLOCATION`, `CADENCE`, `OVER_NOMINALIZATION`, hedging, and redundant signaling;
+- prefer concrete evidence-proximal subject + action + object wording over generic academic-sounding evaluation;
+- return a Language Change Ledger (`L001`, `L002`, ...) instead of a fully rewritten section;
+- each ledger item includes location, category, current wording, suggested wording, reason, canonical term/style rule, logic impact (`NONE` or `LOGIC_REVIEW_REQUIRED`), and confidence;
+- approved ledger IDs are implemented later with `EXACT_EDIT` only.
+
+### 8.7 `publication-filter`
 
 Trigger:
 
@@ -829,7 +856,9 @@ Create `paper/README.md` or a root `WRITING_WORKFLOW.md` containing concise user
 - how stale sections work;
 - how to review/trust hooks;
 - how to run guards manually;
-- how to update verified results.
+- how to update verified results;
+- how to run `AUDIT PROFILE: LANGUAGE`, review the Language Change Ledger, approve selected IDs, and implement them with `EXACT_EDIT`;
+- how `TERMINOLOGY.yaml` and `PROSE_STYLE.yaml` constrain language review.
 
 Include copy-ready templates:
 
@@ -918,6 +947,7 @@ Implement only the approved scope and run global validation.
 
 ```text
 MODE: AUDIT
+AUDIT PROFILE: FULL | LANGUAGE | CONSISTENCY | EVIDENCE
 
 SCOPE:
 -
@@ -1032,7 +1062,7 @@ The task is complete only when:
 - all known path references are updated;
 - external-memory files are populated from real evidence, with unknowns visible;
 - root `AGENTS.md` is active and concise;
-- all six skills exist under `.agents/skills/`;
+- all seven skills exist under `.agents/skills/`;
 - hooks and scripts exist under `.codex/` and pass direct tests;
 - workflow documentation and prompt templates exist;
 - migration inventory and map are complete;
